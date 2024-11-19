@@ -1,4 +1,4 @@
-import { Context, ClientContext } from 'aws-lambda';
+import { Context } from 'aws-lambda';
 import { messagingApi } from '@line/bot-sdk';
 
 type SoracomEventObj = {
@@ -58,10 +58,10 @@ export const handler = async (event: SoracomEventObj, context: Context): Promise
 
     const soracomApi = new SoracomApi(soracomAuthKey, soracomAuthKeyId);
     await soracomApi.auth();
-    let simData: SoracomSimData = await soracomApi.getSimData(requestObj.simId);
+    const simData: SoracomSimData = await soracomApi.getSimData(requestObj.simId);
 
     const lineApi = new LineApi(lineToken);
-    let messageObj: LineGroupMessageObj = {
+    const messageObj: LineGroupMessageObj = {
         simData: simData,
         soracomReq: requestObj,
         soracomEvent: event,
@@ -96,7 +96,7 @@ class SoracomApi {
     private readonly SORACOM_API_BASE_URI = "https://api.soracom.io/v1";
 
     private authObj: SoracomApiAuth; 
-    private defaultHedaers: Headers;
+    private defaultHeaders: Headers;
     private authHeaders: Headers | undefined;
 
     constructor(private authKey: string, private authKeyId: string) {
@@ -105,18 +105,18 @@ class SoracomApi {
             authKeyId: authKeyId
         };
 
-        this.defaultHedaers = new Headers({
+        this.defaultHeaders = new Headers({
             "Content-Type": "application/json"
         });
 
         console.log(`Soracom API constructor authObj : ${JSON.stringify(this.authObj, null, 4)}`);
-        console.log(`Soracom API constructor defaultHedaer : `, this.defaultHedaers);
+        console.log(`Soracom API constructor defaultHeader : `, this.defaultHeaders);
     }
 
     async auth(): Promise<void> {
-        let reqInitObj: RequestInit = {
+        const reqInitObj: RequestInit = {
             method: "POST",
-            headers: this.defaultHedaers,
+            headers: this.defaultHeaders,
             body: JSON.stringify(this.authObj),
 
         };
@@ -126,14 +126,14 @@ class SoracomApi {
         return await fetch(this.SORACOM_API_BASE_URI + "/auth", reqInitObj)
             .then(async res => {
                 if (!res.ok) {
-                    console.error(`faild soracom api to auth() request response:`, res);
-                    throw new Error("faild soracom api to auth() request.");
+                    console.error(`failed soracom api to auth() request response:`, res);
+                    throw new Error("failed soracom api to auth() request.");
                 }
 
                 const body: SoracomApiAuthRes = await res.json() as unknown as SoracomApiAuthRes;
                 console.log(`soracom api to auth() success response. body: `, body);
 
-                this.authHeaders = this.defaultHedaers && new Headers({
+                this.authHeaders = this.defaultHeaders && new Headers({
                     "X-Soracom-API-Key": body.apiKey,
                     "X-Soracom-Token": body.token,
                 });
@@ -151,7 +151,7 @@ class SoracomApi {
             throw new Error(`SORACOM API is not authenticated.`);
         }
 
-        let reqInitObj: RequestInit = {
+        const reqInitObj: RequestInit = {
             method: "GET",
             headers: this.authHeaders,
         }
@@ -164,7 +164,7 @@ class SoracomApi {
                     throw new Error('Failed request Soracom Api from getSimData().')
                 }
 
-                let body = await res.json();
+                const body = await res.json();
                 console.log(`soracom api to getSimData() success response. body: `, body);
 
                 return {
