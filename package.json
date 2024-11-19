@@ -1,0 +1,28 @@
+{
+  "name": "trap-notify-to-line-by-typescript",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "esbuild index.ts --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=dist/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yut-suzuki/trap-notify-to-line-by-typescript.git"
+  },
+  "author": "y_suzuki",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/yut-suzuki/trap-notify-to-line-by-typescript/issues"
+  },
+  "homepage": "https://github.com/yut-suzuki/trap-notify-to-line-by-typescript#readme",
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.145",
+    "@types/node": "^22.9.0",
+    "esbuild": "^0.24.0"
+  },
+  "dependencies": {
+    "@line/bot-sdk": "^9.5.0"
+  }
+}
