@@ -11,9 +11,9 @@ type SoracomEventObj = {
 type SoracomRequestObj = {
     simId: string,
     imsi: string,
-    location: {
-        lat: number,
-        lon: number
+    location?: {
+        lat?: number,
+        lon?: number
     },
 };
 
@@ -210,17 +210,16 @@ class LineApi {
         const messageList: messagingApi.Message[] = [mustMessage];
 
         // 位置情報が有料なので、基本的には送信しない
-        if (messageObj.soracomReq.location.lat || messageObj.soracomReq.location.lon) {
+        if (messageObj.soracomReq.location?.lat || messageObj.soracomReq.location?.lon) {
             const locationMessage: messagingApi.LocationMessage = { 
                 type: "location",
                 title: "罠の所在地",
                 address: "適当",
-                latitude: messageObj.soracomReq.location.lat,
-                longitude: messageObj.soracomReq.location.lon,
+                latitude: messageObj.soracomReq.location.lat ?? 0,
+                longitude: messageObj.soracomReq.location.lon ?? 0,
             };
             messageList.push(locationMessage);
         }
-        
 
         await this.lineClient.pushMessage({
             to: toGroup,
