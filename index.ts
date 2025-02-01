@@ -36,6 +36,8 @@ export const handler = async (event: SoracomEventObj, context: Context): Promise
     console.log(`Context: ${JSON.stringify(context, null, 4)}`);
 
     let requestObj: SoracomRequestObj;
+    let simData: SoracomSimData;
+
     if (context.clientContext == null) {
         console.info("----------------------------------");
         console.log("[This TEST REQUEST] set test env.");
@@ -50,15 +52,19 @@ export const handler = async (event: SoracomEventObj, context: Context): Promise
             }
         }
 
+        simData = {
+            simName: "[TEST] テスト中 [TEST]"
+        };
+
     } else {
         requestObj = context.clientContext as unknown as SoracomRequestObj;
+
+        console.log(`requestObj : ${JSON.stringify(requestObj, null, 4)}`);
+
+        const soracomApi = new SoracomApi(soracomAuthKey, soracomAuthKeyId);
+        await soracomApi.auth();
+        simData = await soracomApi.getSimData(requestObj.simId);
     }
-
-    console.log(`requestObj : ${JSON.stringify(requestObj, null, 4)}`);
-
-    const soracomApi = new SoracomApi(soracomAuthKey, soracomAuthKeyId);
-    await soracomApi.auth();
-    const simData: SoracomSimData = await soracomApi.getSimData(requestObj.simId);
 
     const lineApi = new LineApi(lineToken);
     const messageObj: LineGroupMessageObj = {
@@ -197,21 +203,28 @@ class LineApi {
     async sendGroup(toGroup: string, messageObj: LineGroupMessageObj): Promise<void> {
         console.info(`request line messagingApi to sendGroup. toGroup: ${toGroup}, messageObj: ${JSON.stringify(messageObj, null, 4)}`);
 
+        const mustMessage: messagingApi.TextMessage = { 
+            type: "text", 
+            text: `【罠名称】\n${messageObj.simData.simName}\n【バッテリー状況】\n${messageObj.soracomEvent.batteryLevel * 100}%\n【内容】\n罠が作動しました。\n確認してください。`
+        };
+        const messageList: messagingApi.Message[] = [mustMessage];
+
+        // 位置情報が有料なので、基本的には送信しない
+        if (messageObj.soracomReq.location.lat || messageObj.soracomReq.location.lon) {
+            const locationMessage: messagingApi.LocationMessage = { 
+                type: "location",
+                title: "罠の所在地",
+                address: "適当",
+                latitude: messageObj.soracomReq.location.lat,
+                longitude: messageObj.soracomReq.location.lon,
+            };
+            messageList.push(locationMessage);
+        }
+        
+
         await this.lineClient.pushMessage({
             to: toGroup,
-            messages: [
-                { 
-                    type: "text", 
-                    text: `【罠名称】\n${messageObj.simData.simName}\n【バッテリー状況】\n${messageObj.soracomEvent.batteryLevel * 100}%\n【内容】\n罠が作動しました。\n確認してください。`
-                },
-                {
-                    type: "location",
-                    title: "罠の所在地",
-                    address: "適当",
-                    latitude: messageObj.soracomReq.location.lat,
-                    longitude: messageObj.soracomReq.location.lon,
-                }
-            ]
+            messages: messageList
         });
     }
 }
